@@ -4,16 +4,28 @@ from __future__ import annotations
 
 import os
 import sqlite3
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-from tests._support import analyze, fixture_text  # noqa: F401  (anchors sys.path)
+# Discovery imports this module by its bare name, so nothing has anchored
+# ``src`` yet. The other modules get the same two entries from ``tests._support``.
+_ROOT = Path(__file__).resolve().parents[1]
+for _entry in (_ROOT, _ROOT / "src"):
+    if str(_entry) not in sys.path:
+        sys.path.insert(0, str(_entry))
 
-from ait.cache import CACHE_DIRNAME, CACHE_FILENAME, CacheStore, file_digest, merkle_root
-from ait.engine import Engine
-from ait.rules.registry import _code_digest, ruleset_fingerprint
-from ait.models import (
+from ait.cache import (  # noqa: E402  (imports follow the path anchor)
+    CACHE_DIRNAME,
+    CACHE_FILENAME,
+    CacheStore,
+    file_digest,
+    merkle_root,
+)
+from ait.engine import Engine  # noqa: E402
+from ait.rules.registry import _code_digest, ruleset_fingerprint  # noqa: E402
+from ait.models import (  # noqa: E402
     CausationStep,
     Diagnostic,
     Evidence,

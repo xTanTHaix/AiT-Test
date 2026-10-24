@@ -7,6 +7,7 @@ catalog change invalidates old verdicts instead of silently serving stale ones.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import sqlite3
@@ -118,10 +119,10 @@ class CacheStore:
             connection.execute("PRAGMA busy_timeout=5000")
         except sqlite3.Error:
             if connection is not None:
-                try:
+                # A half-open handle can fail to close as well; the caller gets
+                # ``None`` either way and the scan continues without a cache.
+                with contextlib.suppress(sqlite3.Error):
                     connection.close()
-                except sqlite3.Error:
-                    pass
             return None
         return connection
 
@@ -188,10 +189,10 @@ class CacheStore:
         """Close the underlying connection if one is open."""
         with self._lock:
             if self._connection is not None:
-                try:
+                # Closing is best effort: a connection already torn down by the
+                # sqlite library raises here, and shutdown must not fail on it.
+                with contextlib.suppress(sqlite3.Error):
                     self._connection.close()
-                except sqlite3.Error:
-                    pass
                 self._connection = None
 
     # ---------------------------------------------------------------- queries

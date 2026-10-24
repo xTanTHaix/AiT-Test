@@ -7,9 +7,8 @@ import os
 import subprocess
 import sys
 import tempfile
-import unittest
 from pathlib import Path
-from unittest import mock
+from unittest import TestCase, main, mock
 
 from tests._support import FIXTURES, REPO_ROOT
 
@@ -68,7 +67,7 @@ def write_source(path: Path, text: str) -> None:
     path.write_bytes(text.encode("utf-8"))
 
 
-class ColourPolicyTests(unittest.TestCase):
+class ColourPolicyTests(TestCase):
     def test_no_color_environment_variable_beats_a_tty(self) -> None:
         class _TtyBuffer(io.StringIO):
             def isatty(self) -> bool:
@@ -86,7 +85,7 @@ class ColourPolicyTests(unittest.TestCase):
         self.assertNotIn("\x1b[", buffer.getvalue())
 
 
-class ExitCodeTests(unittest.TestCase):
+class ExitCodeTests(TestCase):
     def test_clean_target_exits_zero(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -177,7 +176,7 @@ class ExitCodeTests(unittest.TestCase):
         self.assertIn("ait-engine 1.0.0", result.stdout)
 
 
-class FlagTests(unittest.TestCase):
+class FlagTests(TestCase):
     def setUp(self) -> None:
         self._temporary = tempfile.TemporaryDirectory()
         self.root = Path(self._temporary.name)
@@ -309,7 +308,7 @@ class FlagTests(unittest.TestCase):
         self.assertIn("1 failed, 2 passed", result.stdout)
 
 
-class FixSessionUnitTests(unittest.TestCase):
+class FixSessionUnitTests(TestCase):
     """Exercise ``_apply_single`` directly: no TTY is available in CI."""
 
     def setUp(self) -> None:
@@ -396,7 +395,7 @@ class FixSessionUnitTests(unittest.TestCase):
         self.assertEqual(leftovers, [])
 
 
-class PatchLoopTests(unittest.TestCase):
+class PatchLoopTests(TestCase):
     def setUp(self) -> None:
         self._temporary = tempfile.TemporaryDirectory()
         self.root = Path(self._temporary.name)
@@ -459,7 +458,7 @@ class PatchLoopTests(unittest.TestCase):
         self.assertEqual(lines, sorted(lines, reverse=True))
 
 
-class EncodingTests(unittest.TestCase):
+class EncodingTests(TestCase):
     """``--fix`` must write back the codec the file actually used."""
 
     THAI = (
@@ -556,14 +555,14 @@ class EncodingTests(unittest.TestCase):
             self.assertEqual(list(root.glob("*.ait-tmp")), [])
 
 
-class SelfScanTests(unittest.TestCase):
+class SelfScanTests(TestCase):
     def test_package_scan_is_clean(self) -> None:
         result = run_cli(str(REPO_ROOT / "src"), "--no-cache")
         self.assertEqual(result.returncode, 0, result.stdout[-4000:])
         self.assertIn("DEFECT 0", result.stdout)
 
 
-class FixtureCorpusTests(unittest.TestCase):
+class FixtureCorpusTests(TestCase):
     """The corpus is deliberately defective: a clean exit means the rules went silent."""
 
     def test_corpus_exits_one_and_reports_defects(self) -> None:
@@ -573,4 +572,4 @@ class FixtureCorpusTests(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    main()

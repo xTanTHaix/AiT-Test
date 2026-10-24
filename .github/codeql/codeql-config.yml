@@ -1,0 +1,12 @@
+name: AiT-test CodeQL config
+
+# ``security-and-quality`` extends the default security suite with the quality
+# queries, which is where most of this project's findings came from.
+queries:
+  - uses: security-and-quality
+
+# The fixture corpus is meant to be defective: it exists so the rules and the
+# CLI tests have something to catch. Analysing it would only produce alerts
+# about code that is never shipped.
+paths-ignore:
+  - tests/fixtures

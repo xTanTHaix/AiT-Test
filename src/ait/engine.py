@@ -424,7 +424,9 @@ class Engine:
         result.suppressed = self.suppressed_total
         result.elapsed_ms = (time.perf_counter() - started) * 1000.0
         if cache_usable:
-            _indexed, result.merkle = cache.index_digest(self.ruleset)
+            # Only the root is needed here. ``files_cached`` already counts this
+            # run's hits, while the index also holds rows from earlier runs.
+            result.merkle = cache.index_digest(self.ruleset)[1]
         else:
             result.merkle = merkle_root(digests)
         if result.unparsable:

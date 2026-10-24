@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import contextlib
 import os
 import shutil
 import sys
@@ -406,10 +407,10 @@ def _apply_single(
         os.replace(temporary, path)
     except OSError as exc:
         if temporary is not None:
-            try:
+            # The write already failed and the original file is untouched, so a
+            # failed clean-up must not replace the error the operator sees.
+            with contextlib.suppress(OSError):
                 temporary.unlink()
-            except OSError:
-                pass
         return False, f"{relative}: write failed ({exc})"
     return True, "applied"
 

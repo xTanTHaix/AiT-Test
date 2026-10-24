@@ -384,7 +384,6 @@ class CallGraph:
             self._qualified_by_parent[(parent, frame.name)] = info.qualname
 
         for qualname, info in self.functions.items():
-            frame = self.scopes.by_qualname[qualname]
             analyzer = _BodyAnalyzer(self, info, self.scopes)
             for statement in getattr(info.node, "body", ()):  # type: ignore[attr-defined]
                 analyzer.visit(statement)
