@@ -379,3 +379,27 @@ python -m compileall -q src cli.py mcp.py scripts   → Can't list 'scripts' · 
 - กฎ R01 ยังรายงาน global RMW ได้เฉพาะเมื่อมี spawn site ที่ resolve ได้ (พฤติกรรมเดิม ไม่ได้ขยายในรอบนี้)
 - DOC-001 ยังคงเก็บ snippet แบบ `mcpServers` ไว้เพราะใช้ได้กับ Claude Desktop; opencode ต้องใช้บล็อกที่เพิ่มเข้ามา
 
+---
+
+## 11. หลังปล่อย v1.0.0
+
+ปล่อยเมื่อ 2026-10-24 และตรวจย้อนจาก GitHub API โดยตรง
+
+| รายการ | ผล |
+|---|---|
+| commit | `e2bb2d4` บน `main` |
+| CI run แรกหลัง push | 15/15 jobs success (12 test environments + `package` + `lint` + `security`) ที่ https://github.com/xTanTHaix/AiT-Test/actions/runs/40085047779 |
+| tag | `v1.0.0` (annotated) ชี้ `e2bb2d4` |
+| release | https://github.com/xTanTHaix/AiT-Test/releases/tag/v1.0.0 พร้อม asset `ait_test-1.0.0-py3-none-any.whl` (91,113 ไบต์) |
+| topics | 14 หัวข้อ |
+| license ที่ GitHub ตรวจพบ | MIT (จาก `LICENSE`) |
+
+สิ่งที่เปลี่ยนหลังรอบ QA:
+
+- เพิ่ม `README.md` ฉบับอังกฤษ แปลจาก `readme-th.md` โครงเดียวกัน (14 หัวข้อ, 14 `<details>`, 8 ตาราง) พร้อม language switch ทั้งสองไฟล์
+- `pyproject.toml`: `readme = "README.md"`, `license = "MIT"` (SPDX string), `setuptools>=77`
+- `.gitattributes` บังคับ `eol=lf` เพื่อให้ line number ในผลสแกนตรงกันทุกแพลตฟอร์ม
+- ตรวจ wheel ซ้ำใน venv สะอาด: `License-Expression: MIT`, มี `licenses/LICENSE`, ไม่มี `Requires-Dist`, `ait` / `ait-mcp` ทำงานนอก source tree
+
+ข้อจำกัดข้อแรกใน §8 (ยังไม่ได้รันบน CI จริง) ปิดแล้วด้วย run ข้างต้น
+
