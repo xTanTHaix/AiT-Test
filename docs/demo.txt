@@ -1,0 +1,72 @@
+# Real transcript captured from a temporary workspace (paths anonymised)
+
+## 1. Detect
+
+=========================== AiT-test session starts ============================
+platform win32 -- Python 3.12.10, ait-engine-1.0.0
+rootdir: <workspace>
+target: demo.py
+collecting 1 files to analyze...
+
+demo.py .......F..... [100%]
+
+=================================== FAILURES ===================================
+
+================== [AIT-N01] Unshielded NoneType Dereference ===================
+File: demo.py:10:10
+Severity: DEFECT (Confidence: 0.90)
+Function: render()
+Symbol: value
+
+  `value` can be None at this point but is dereferenced without a guard
+
+       8 | def render() -> None:
+       9 |     value = lookup("alpha")
+  >   10 |     print(value.upper())
+
+--- Causation Trace ---
+  Step 1 | demo.py:9:12
+         | `lookup()` is declared to return `Optional[str]`, so the result can be None
+  Step 2 | demo.py:9:4
+         | `value` receives the return value of `lookup()`
+  Step 3 | demo.py:10:10
+         | `value` is dereferenced here without an `is None` guard
+
+--- Minimal Repro Witness ---
+  A producer that can return None is dereferenced without a guard.
+  # Cause traced to demo.py:10 (value)
+  class Worker:
+      def send(self, payload: str) -> None:
+          print("sent", payload)
+  
+  def get_worker(key: str) -> "Worker | None":
+      return None
+  
+  worker = get_worker("alpha")
+  worker.send("payload")  # AttributeError: 'NoneType' object has no attribute 'send'
+
+--- Suggested Fix ---
+  --- a/demo.py
+  +++ b/demo.py
+  @@ -10,1 +10,3 @@
+  +    if value is None:
+  +        raise RuntimeError(f"value is unexpectedly None")
+       print(value.upper())
+
+========================= 1 failed, 0 passed in 2.59ms =========================
+  DEFECT 1 · WARNING 0 · ADVICE 0
+  exit code: 1
+
+## 2. After applying the suggested guard
+
+=========================== AiT-test session starts ============================
+platform win32 -- Python 3.12.10, ait-engine-1.0.0
+rootdir: <workspace>
+target: demo.py
+collecting 1 files to analyze...
+
+demo.py ............. [100%]
+
+========================= 0 failed, 1 passed in 2.22ms =========================
+  DEFECT 0 · WARNING 0 · ADVICE 0
+

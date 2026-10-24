@@ -1,0 +1,158 @@
+name: CI
+
+"on":
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHONIOENCODING: utf-8
+  PYTHONDONTWRITEBYTECODE: "1"
+  NO_COLOR: "1"
+
+jobs:
+  # ------------------------------------------------------------------ correctness
+  test:
+    name: ${{ matrix.os }} · CPython ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.10", "3.11", "3.12", "3.13", "3.14", "3.15"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up CPython ${{ matrix.python-version }}
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
+
+      - name: Interpreter identity
+        run: python -VV
+
+      - name: Unit tests (stdlib unittest, no pytest)
+        run: python -m unittest discover -s tests -v
+
+      - name: Deprecation guard on the newest interpreter
+        if: matrix.python-version == '3.15'
+        run: python -W error::DeprecationWarning -m unittest discover -s tests
+
+      - name: Self-scan of src/ must be clean
+        run: python cli.py src --no-cache
+
+      - name: Runs with no site-packages
+        run: python -S cli.py src --no-cache
+
+  # ------------------------------------------------------------------ packaging
+  package:
+    name: package · wheel + clean-room install
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up CPython 3.12
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Build the wheel
+        run: python -m pip wheel . --no-deps -w dist
+
+      - name: Install into a clean virtualenv
+        run: |
+          python -m venv "$RUNNER_TEMP/venv"
+          "$RUNNER_TEMP/venv/bin/python" -m pip install --no-index --find-links dist --no-deps ait-test
+
+      - name: Console scripts work outside the source tree
+        working-directory: ${{ runner.temp }}
+        run: |
+          "$RUNNER_TEMP/venv/bin/ait" --version
+          printf 'def render(value):\n    return value.upper()\n' > sample.py
+          "$RUNNER_TEMP/venv/bin/ait" sample.py --no-cache --no-color
+          printf '' | "$RUNNER_TEMP/venv/bin/ait-mcp"
+
+      - name: Metadata declares no runtime dependencies
+        run: |
+          "$RUNNER_TEMP/venv/bin/python" - <<'PY'
+          import importlib.metadata as metadata
+          import sys
+
+          requires = metadata.requires("ait-test")
+          if requires:
+              sys.exit(f"unexpected runtime dependencies: {requires}")
+          modules = ["ait", "ait.cli", "ait.mcp", "ait.slicer", "ait.rules.registry"]
+          for module in modules:
+              __import__(module)
+          print("wheel ok: no Requires-Dist, imported", ", ".join(modules))
+          PY
+
+  # ------------------------------------------------------------------ static checks
+  lint:
+    name: lint · ruff + bandit + actionlint
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up CPython 3.12
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Install pinned linters
+        run: python -m pip install --disable-pip-version-check ruff==0.17.2 bandit==1.9.4
+
+      - name: Ruff (bugs and undefined names)
+        run: ruff check --output-format=github .
+
+      - name: Bandit (security, medium and above)
+        run: bandit -c pyproject.toml -r src cli.py mcp.py -ll -q
+
+      - name: Byte-compile every module
+        run: python -m compileall -q src cli.py mcp.py
+
+      - name: Actionlint (workflow syntax and expressions)
+        uses: raven-actions/actionlint@3d39aea434753780c3b3d4a1a31c854b4dbf49d7 # v2.2.0
+
+  # ------------------------------------------------------------------ dependencies
+  security:
+    name: security · OSV-Scanner
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Scan the dependency surface with OSV
+        run: |
+          curl -fsSL -o "$RUNNER_TEMP/osv-scanner" \
+            https://github.com/google/osv-scanner/releases/download/v2.7.0/osv-scanner_linux_amd64
+          chmod +x "$RUNNER_TEMP/osv-scanner"
+          "$RUNNER_TEMP/osv-scanner" --version
+          "$RUNNER_TEMP/osv-scanner" scan source \
+            --recursive \
+            --allow-no-lockfiles \
+            --verbosity error \
+            .
+
+      - name: Fail if a lockfile ever appears without being scanned
+        run: |
+          if [ -n "$(find . -maxdepth 3 \( -name 'requirements*.txt' -o -name 'poetry.lock' -o -name 'uv.lock' -o -name 'Pipfile.lock' \) -not -path './.git/*' -print -quit)" ]; then
+            echo "::error::a dependency lockfile exists; drop --allow-no-lockfiles and scan it"
+            exit 1
+          fi
+          echo "no lockfiles: the runtime dependency surface is still empty"

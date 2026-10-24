@@ -1,0 +1,15 @@
+.ait_cache/
+.ait_backup/
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+scripts/
+md/
+.onyxsi/
+.benchmarks/
