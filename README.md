@@ -10,7 +10,7 @@
 
 ---
 
-<p align="center"><a href="#"><img alt="Python 3.10 to 3.15" src="https://img.shields.io/badge/python-3.10%20%E2%86%92%203.15-3776AB?style=flat-square&logo=python&logoColor=white"></a> <a href="#"><img alt="Version v1.0.0" src="https://img.shields.io/badge/version-v1.0.0-6366F1?style=flat-square&logo=semver&logoColor=white"></a> <a href="#tests"><img alt="268 tests passing" src="https://img.shields.io/badge/tests-268%20passing-059669?style=flat-square&logo=checkmarx&logoColor=white"></a> <a href="#ci"><img alt="CI: 15 job runs" src="https://img.shields.io/badge/CI-15%20job%20runs-2088FF?style=flat-square&logo=githubactions&logoColor=white"></a> <a href="https://github.com/xTanTHaix/AiT-Test/actions/workflows/codeql.yml"><img alt="CodeQL status" src="https://img.shields.io/github/actions/workflow/status/xTanTHaix/AiT-Test/codeql.yml?branch=main&label=CodeQL&style=flat-square&logo=githubactions&logoColor=white"></a> <a href="#"><img alt="Zero runtime dependencies" src="https://img.shields.io/badge/runtime%20dependencies-0-22C55E?style=flat-square&logo=python&logoColor=white"></a> <a href="#rules"><img alt="13 rules" src="https://img.shields.io/badge/rules-13-0284C7?style=flat-square&logo=shieldsdotio&logoColor=white"></a> <a href="#"><img alt="Windows and Linux" src="https://img.shields.io/badge/platforms-Windows%20%7C%20Linux-0284C7?style=flat-square&logo=linux&logoColor=white"></a> <a href="#credits"><img alt="Author xTanTHaix" src="https://img.shields.io/badge/author-xTanTHaix-8B5CF6?style=flat-square&logo=github&logoColor=white"></a> <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-F59E0B?style=flat-square&logo=googledocs&logoColor=white"></a></p>
+<p align="center"><a href="#"><img alt="Python 3.10 to 3.15" src="https://img.shields.io/badge/python-3.10%20%E2%86%92%203.15-3776AB?style=flat-square&logo=python&logoColor=white"></a> <a href="#"><img alt="Version v1.0.0" src="https://img.shields.io/badge/version-v1.0.0-6366F1?style=flat-square&logo=semver&logoColor=white"></a> <a href="#tests"><img alt="268 tests passing" src="https://img.shields.io/badge/tests-268%20passing-059669?style=flat-square&logo=checkmarx&logoColor=white"></a> <a href="#ci"><img alt="CI: 15 job runs" src="https://img.shields.io/badge/CI-15%20job%20runs-2088FF?style=flat-square&logo=githubactions&logoColor=white"></a> <a href="https://github.com/xTanTHaix/AiT-Test/actions/workflows/codeql.yml"><img alt="CodeQL status" src="https://img.shields.io/github/actions/workflow/status/xTanTHaix/AiT-Test/codeql.yml?branch=main&label=CodeQL&style=flat-square&logo=githubactions&logoColor=white"></a> <a href="#"><img alt="Zero runtime dependencies" src="https://img.shields.io/badge/runtime%20dependencies-0-22C55E?style=flat-square&logo=python&logoColor=white"></a> <a href="#rules"><img alt="13 rules" src="https://img.shields.io/badge/rules-13-0284C7?style=flat-square&logo=shieldsdotio&logoColor=white"></a> <a href="https://github.com/xTanTHaix/AiT-Test"><img alt="Code size" src="https://img.shields.io/github/languages/code-size/xTanTHaix/AiT-Test?style=flat-square&color=0284C7"></a> <a href="#mcp"><img alt="MCP Server" src="https://img.shields.io/badge/MCP-Server-8B5CF6?style=flat-square&logo=anthropic&logoColor=white"></a> <a href="#"><img alt="Windows and Linux" src="https://img.shields.io/badge/platforms-Windows%20%7C%20Linux-0284C7?style=flat-square&logo=linux&logoColor=white"></a> <a href="#credits"><img alt="Author xTanTHaix" src="https://img.shields.io/badge/author-xTanTHaix-8B5CF6?style=flat-square&logo=github&logoColor=white"></a> <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-F59E0B?style=flat-square&logo=googledocs&logoColor=white"></a></p>
 
 <p align="center"><a href="docs/demo.txt">🎬 Real run</a> • <a href="#rules">🧭 13 rules</a> • <a href="#cli">🖥️ CLI</a> • <a href="#mcp">🤖 MCP</a> • <a href="#tests">🧪 Tests</a> • <a href="#ci">🔄 CI</a> • <a href="#credits">🏅 Credits</a></p>
 
@@ -328,9 +328,10 @@ Measured on Windows 11 (AMD64) and WSL2 Ubuntu across three interpreters.
 
 \* WSL reads the repo through `/mnt/l` (drvfs), which slows every sqlite round trip; the engine itself is not the slow part.
 
-Engine size (`src/ait`, 23 files) **7,080 lines** · Runtime dependencies **0**
+Engine size (`src/ait`, 23 files) **7,083 lines** · Runtime dependencies **0**
 
 Numbers shift with the machine and file sizes; the cold/warm ratio says more than the absolute values.
+The code-size badge at the top counts every line of code in the repository as bytes, tests included, so it measures the whole project rather than `src/ait`.
 
 ---
 
@@ -562,7 +563,7 @@ If false positives worry you more than false negatives, start with `--maxfail 5`
 | :--- | :--- |
 | 🏛️ Architect of the 13 Rules | designed the 13-rule set (Z/R/A/M/N/H) and the "a DEFECT needs evidence or it drops to WARNING" policy |
 | 🧪 Eight-Interpreter Verifier | confirmed 268 tests on CPython 3.10 → 3.15 across Windows 11 and WSL2 Ubuntu |
-| 🛡️ Zero-Dependency Keeper | 23 engine files, 7,080 lines, no runtime dependency and fully offline |
+| 🛡️ Zero-Dependency Keeper | 23 engine files, 7,083 lines, no runtime dependency and fully offline |
 | 🤖 MCP Toolsmith | JSON-RPC 2.0 contract for three tools with validation, `structuredContent` and a lifecycle that really closes |
 | 🔁 CI Gatekeeper | 4 jobs / 15 runs: test matrix on 12 environments + package + lint (ruff, bandit, actionlint) + OSV, plus a CodeQL workflow sitting at 0 open alerts |
 
