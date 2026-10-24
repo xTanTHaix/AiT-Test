@@ -10,7 +10,7 @@
 
 ---
 
-<p align="center"><a href="#"><img alt="Python 3.10 to 3.15" src="https://img.shields.io/badge/python-3.10%20%E2%86%92%203.15-3776AB?style=flat-square&logo=python&logoColor=white"></a> <a href="#"><img alt="Version v1.0.0" src="https://img.shields.io/badge/version-v1.0.0-6366F1?style=flat-square&logo=semver&logoColor=white"></a> <a href="#tests"><img alt="268 tests passing" src="https://img.shields.io/badge/tests-268%20passing-059669?style=flat-square&logo=checkmarx&logoColor=white"></a> <a href="#ci"><img alt="CI: 15 job runs" src="https://img.shields.io/badge/CI-15%20job%20runs-2088FF?style=flat-square&logo=githubactions&logoColor=white"></a> <a href="#"><img alt="Zero runtime dependencies" src="https://img.shields.io/badge/runtime%20dependencies-0-22C55E?style=flat-square&logo=python&logoColor=white"></a> <a href="#rules"><img alt="13 rules" src="https://img.shields.io/badge/rules-13-0284C7?style=flat-square&logo=shieldsdotio&logoColor=white"></a> <a href="#"><img alt="Windows and Linux" src="https://img.shields.io/badge/platforms-Windows%20%7C%20Linux-0284C7?style=flat-square&logo=linux&logoColor=white"></a> <a href="#credits"><img alt="Author xTanTHaix" src="https://img.shields.io/badge/author-xTanTHaix-8B5CF6?style=flat-square&logo=github&logoColor=white"></a> <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-F59E0B?style=flat-square&logo=googledocs&logoColor=white"></a></p>
+<p align="center"><a href="#"><img alt="Python 3.10 to 3.15" src="https://img.shields.io/badge/python-3.10%20%E2%86%92%203.15-3776AB?style=flat-square&logo=python&logoColor=white"></a> <a href="#"><img alt="Version v1.0.0" src="https://img.shields.io/badge/version-v1.0.0-6366F1?style=flat-square&logo=semver&logoColor=white"></a> <a href="#tests"><img alt="268 tests passing" src="https://img.shields.io/badge/tests-268%20passing-059669?style=flat-square&logo=checkmarx&logoColor=white"></a> <a href="#ci"><img alt="CI: 15 job runs" src="https://img.shields.io/badge/CI-15%20job%20runs-2088FF?style=flat-square&logo=githubactions&logoColor=white"></a> <a href="https://github.com/xTanTHaix/AiT-Test/actions/workflows/codeql.yml"><img alt="CodeQL status" src="https://img.shields.io/github/actions/workflow/status/xTanTHaix/AiT-Test/codeql.yml?branch=main&label=CodeQL&style=flat-square&logo=githubactions&logoColor=white"></a> <a href="#"><img alt="Zero runtime dependencies" src="https://img.shields.io/badge/runtime%20dependencies-0-22C55E?style=flat-square&logo=python&logoColor=white"></a> <a href="#rules"><img alt="13 rules" src="https://img.shields.io/badge/rules-13-0284C7?style=flat-square&logo=shieldsdotio&logoColor=white"></a> <a href="#"><img alt="Windows and Linux" src="https://img.shields.io/badge/platforms-Windows%20%7C%20Linux-0284C7?style=flat-square&logo=linux&logoColor=white"></a> <a href="#credits"><img alt="Author xTanTHaix" src="https://img.shields.io/badge/author-xTanTHaix-8B5CF6?style=flat-square&logo=github&logoColor=white"></a> <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-F59E0B?style=flat-square&logo=googledocs&logoColor=white"></a></p>
 
 <p align="center"><a href="docs/demo.txt">🎬 ผลรันจริง</a> • <a href="#rules">🧭 กฎ 13 ข้อ</a> • <a href="#cli">🖥️ CLI</a> • <a href="#mcp">🤖 MCP</a> • <a href="#tests">🧪 การทดสอบ</a> • <a href="#ci">🔄 CI</a> • <a href="#credits">🏅 เครดิต</a></p>
 
@@ -375,7 +375,10 @@ AiT-Test/
 ├── pyproject.toml         # packaging (license = MIT)
 ├── LICENSE                # MIT license text
 ├── .github/workflows/
-│   └── ci.yml             # 4 jobs: test matrix (12) + package + lint + security
+│   ├── ci.yml             # 4 jobs: test matrix (12) + package + lint + security
+│   └── codeql.yml         # CodeQL, security-and-quality, weekly
+├── .github/codeql/
+│   └── codeql-config.yml  # query suite + tests/fixtures excluded
 ├── .github/dependabot.yml # SHA-pinned actions, updated weekly
 ├── src/ait/
 │   ├── engine.py          # discover / scan / compare_findings / verify_fix
@@ -404,6 +407,7 @@ AiT-Test/
 | Infra | `cache.py` | sqlite3 WAL, digest/ruleset keyed, prune, `--lf` index |
 | Infra | `models.py` | immutable Diagnostic/Patch/Witness, exit codes, SCHEMA_VERSION |
 | CI | `.github/workflows/ci.yml` | test matrix, self-scan, stdlib-only run, integration tests |
+| CI | `.github/workflows/codeql.yml` | CodeQL security-and-quality, `tests/fixtures` excluded |
 | CI | `tests/test_cli_integration.py` | ขับ `cli.py` / `mcp.py` จริงผ่าน subprocess แล้ว assert exit code / JSON |
 
 </details>
@@ -469,6 +473,7 @@ OK
 ## 🔄 CI (GitHub Actions)
 
 CI ใช้ GitHub Actions โดย pin ทุก action ด้วย **commit SHA** (ไม่ใช่ tag ลอย) และมี Dependabot อัปเดตให้ทุกสัปดาห์
+ส่วน CodeQL แยกเป็น workflow ของตัวเอง (`codeql.yml`) ด้วยนโยบาย pin เดียวกัน
 
 <details>
 <summary><b>🧪 คลิกเพื่อขยาย: job <code>test</code> บน 12 environment</b></summary>
@@ -511,33 +516,21 @@ Bandit รายงาน `B101 assert` อยู่ 2 จุด (`cache.py`, `c
 </details>
 
 <details>
-<summary><b>🔐 คลิกเพื่อขยาย: ทำไมยังไม่เปิด CodeQL / dependency-review</b></summary>
+<summary><b>🔐 คลิกเพื่อขยาย: CodeQL, dependency-review และเรื่อง badge ของ OSV</b></summary>
 
-ทั้งสองตัวต้องใช้ **GitHub Advanced Security** ถ้า repo เป็น private (CodeQL ใช้ Code Scanning, dependency-review ใช้ dependency graph API)
+**CodeQL** ทำงานใน workflow แยก (`.github/workflows/codeql.yml`) ทุกครั้งที่ push ขึ้น `main` ทุกสัปดาห์ตาม schedule และสั่งรันเองได้
+ใช้ชุด `security-and-quality` และ pin `github/codeql-action` v4.39.1 ด้วย commit SHA เหมือน action ตัวอื่นทั้งหมดใน repo
+สิทธิ์ `security-events: write` ให้เฉพาะ job ที่วิเคราะห์
 
-ถ้า repo เป็น public และต้องการเพิ่ม ใส่ไฟล์ `.github/workflows/codeql.yml` แยกได้เลย:
+ผลวิเคราะห์รอบแรกออกมา 9 รายการ และแก้จริงทั้ง 9 ไม่ได้ dismiss:
+`except ...: pass` สามจุดเปลี่ยนเป็น `contextlib.suppress(...)`, import ซ้ำหนึ่งจุดกับ import ที่ไม่ใช้หนึ่งจุดและตัวแปร local ที่ไม่ได้ใช้อีกสองตัวถูกเก็บกวาด,
+ส่วนสองรายการสุดท้ายชี้ไปที่ `tests/fixtures` ซึ่งเป็นโค้ดที่ตั้งใจให้พัง
+โฟลเดอร์นั้นจึงถูกกันออกด้วย `.github/codeql/codeql-config.yml` แทนการ dismiss ทีละ alert
 
-```yaml
-name: CodeQL
-on:
-  push:
-    branches: [main]
-  schedule:
-    - cron: "0 3 * * 1"
-permissions:
-  contents: read
-  security-events: write
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: github/codeql-action/init@793b778da9c9275a0f276522b27cb5fc14bba279 # v4
-        with:
-          languages: python
-          queries: security-and-quality
-      - uses: github/codeql-action/analyze@793b778da9c9275a0f276522b27cb5fc14bba279 # v4
-```
+**dependency-review ยังไม่เปิด** เพราะต้องใช้ dependency graph API และแพ็กเกจนี้ประกาศ dependency เป็นศูนย์ จึงไม่มีอะไรให้ตรวจ
+
+**badge ของ OSV ไม่ได้อยู่ในหน้านี้** เพราะ OSV ไม่มี badge ทางการ และ shield แบบ "0 issues" ที่เขียนตายตัวจะยังบอก 0 ต่อไปแม้มี advisory ใหม่
+สถานะจริงจึงอยู่ใน job `security` ของ CI ที่ถูกอัปเดตทุกครั้งที่รัน ส่วน shield ของ CodeQL ที่อยู่ด้านบนหน้าเป็นสถานะสดจาก GitHub เอง
 
 </details>
 
@@ -573,7 +566,7 @@ jobs:
 | 🧪 Eight-Interpreter Verifier | ยืนยัน 268 tests บน CPython 3.10 → 3.15 ทั้ง Windows 11 และ WSL2 Ubuntu |
 | 🛡️ Zero-Dependency Keeper | engine 23 ไฟล์ 7,080 บรรทัด ที่ไม่มี dependency ตอนรันและทำงาน offline ได้ |
 | 🤖 MCP Toolsmith | สัญญา JSON-RPC 2.0 สาม tools พร้อม validation, `structuredContent` และ lifecycle ที่ปิดได้จริง |
-| 🔁 CI Gatekeeper | 4 jobs / 15 runs: test matrix 12 environment + package + lint (ruff, bandit, actionlint) + OSV |
+| 🔁 CI Gatekeeper | 4 jobs / 15 runs: test matrix 12 environment + package + lint (ruff, bandit, actionlint) + OSV และ CodeQL แยกอีก workflow ที่ 0 alert |
 
 </details>
 

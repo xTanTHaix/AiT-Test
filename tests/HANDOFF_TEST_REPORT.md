@@ -403,3 +403,33 @@ python -m compileall -q src cli.py mcp.py scripts   → Can't list 'scripts' · 
 
 ข้อจำกัดข้อแรกใน §8 (ยังไม่ได้รันบน CI จริง) ปิดแล้วด้วย run ข้างต้น
 
+---
+
+## 12. CodeQL หลังเปิดใช้
+
+เปิด `.github/workflows/codeql.yml` แบบ advanced setup เพราะ default setup ของ repo ยังเป็น `not-configured`
+ใช้ชุด `security-and-quality` และ pin `github/codeql-action` v4.39.1 ที่ commit `9b3254085494b55a0f7c4c2b3d2d52cc712ce370`
+
+| รอบ | commit | ผล |
+|---|---|---|
+| 1 | `21782e8` | analyze success, 9 alerts, 172 rules |
+| 2 | `ff6be3f` | analyze success, 0 alerts |
+
+แก้ทั้ง 9 รายการ ไม่ได้ dismiss สักข้อ
+
+| alert | ไฟล์ | สิ่งที่แก้ |
+|---|---|---|
+| `py/empty-except` ×3 | `cache.py` 2 จุด, `cli.py` 1 จุด | เปลี่ยนเป็น `contextlib.suppress(...)` |
+| `py/import-and-import-from` | `tests/test_cli_integration.py` | รวมเป็น `from unittest import TestCase, main, mock` |
+| `py/unused-import` | `tests/test_cache.py` | เอา side-effect import ออก แล้วเขียน anchor `sys.path` ตรง ๆ |
+| `py/unused-local-variable` ×2 | `engine.py`, `flow/call_graph.py` | ตัด binding ที่ไม่ถูกใช้ |
+| `py/catch-base-exception`, `py/modification-of-default-value` | `tests/fixtures` | กันโฟลเดอร์ออกด้วย `codeql-config.yml` เพราะเป็นโค้ดที่ตั้งใจให้พัง |
+
+หลังแก้: CI 15/15 และ CodeQL success ที่ `ff6be3f`
+(https://github.com/xTanTHaix/AiT-Test/actions/runs/40086576026 และ https://github.com/xTanTHaix/AiT-Test/actions/runs/40086575990)
+badge ที่ README เป็นสถานะสดของ workflow นี้ ไม่ใช่ตัวเลขที่เขียนตายตัว
+
+ยังไม่เปิด `dependency-review` เพราะแพ็กเกจประกาศ dependency เป็นศูนย์ และไม่ได้ใส่ badge ของ OSV
+เพราะ OSV ไม่มี badge ทางการ ส่วน shield แบบ "0 issues" จะค้างอยู่ที่ 0 แม้มี advisory ใหม่
+สถานะ OSV จึงดูจาก job `security` ใน CI ตามเดิม
+

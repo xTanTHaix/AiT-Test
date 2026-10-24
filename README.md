@@ -10,7 +10,7 @@
 
 ---
 
-<p align="center"><a href="#"><img alt="Python 3.10 to 3.15" src="https://img.shields.io/badge/python-3.10%20%E2%86%92%203.15-3776AB?style=flat-square&logo=python&logoColor=white"></a> <a href="#"><img alt="Version v1.0.0" src="https://img.shields.io/badge/version-v1.0.0-6366F1?style=flat-square&logo=semver&logoColor=white"></a> <a href="#tests"><img alt="268 tests passing" src="https://img.shields.io/badge/tests-268%20passing-059669?style=flat-square&logo=checkmarx&logoColor=white"></a> <a href="#ci"><img alt="CI: 15 job runs" src="https://img.shields.io/badge/CI-15%20job%20runs-2088FF?style=flat-square&logo=githubactions&logoColor=white"></a> <a href="#"><img alt="Zero runtime dependencies" src="https://img.shields.io/badge/runtime%20dependencies-0-22C55E?style=flat-square&logo=python&logoColor=white"></a> <a href="#rules"><img alt="13 rules" src="https://img.shields.io/badge/rules-13-0284C7?style=flat-square&logo=shieldsdotio&logoColor=white"></a> <a href="#"><img alt="Windows and Linux" src="https://img.shields.io/badge/platforms-Windows%20%7C%20Linux-0284C7?style=flat-square&logo=linux&logoColor=white"></a> <a href="#credits"><img alt="Author xTanTHaix" src="https://img.shields.io/badge/author-xTanTHaix-8B5CF6?style=flat-square&logo=github&logoColor=white"></a> <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-F59E0B?style=flat-square&logo=googledocs&logoColor=white"></a></p>
+<p align="center"><a href="#"><img alt="Python 3.10 to 3.15" src="https://img.shields.io/badge/python-3.10%20%E2%86%92%203.15-3776AB?style=flat-square&logo=python&logoColor=white"></a> <a href="#"><img alt="Version v1.0.0" src="https://img.shields.io/badge/version-v1.0.0-6366F1?style=flat-square&logo=semver&logoColor=white"></a> <a href="#tests"><img alt="268 tests passing" src="https://img.shields.io/badge/tests-268%20passing-059669?style=flat-square&logo=checkmarx&logoColor=white"></a> <a href="#ci"><img alt="CI: 15 job runs" src="https://img.shields.io/badge/CI-15%20job%20runs-2088FF?style=flat-square&logo=githubactions&logoColor=white"></a> <a href="https://github.com/xTanTHaix/AiT-Test/actions/workflows/codeql.yml"><img alt="CodeQL status" src="https://img.shields.io/github/actions/workflow/status/xTanTHaix/AiT-Test/codeql.yml?branch=main&label=CodeQL&style=flat-square&logo=githubactions&logoColor=white"></a> <a href="#"><img alt="Zero runtime dependencies" src="https://img.shields.io/badge/runtime%20dependencies-0-22C55E?style=flat-square&logo=python&logoColor=white"></a> <a href="#rules"><img alt="13 rules" src="https://img.shields.io/badge/rules-13-0284C7?style=flat-square&logo=shieldsdotio&logoColor=white"></a> <a href="#"><img alt="Windows and Linux" src="https://img.shields.io/badge/platforms-Windows%20%7C%20Linux-0284C7?style=flat-square&logo=linux&logoColor=white"></a> <a href="#credits"><img alt="Author xTanTHaix" src="https://img.shields.io/badge/author-xTanTHaix-8B5CF6?style=flat-square&logo=github&logoColor=white"></a> <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-F59E0B?style=flat-square&logo=googledocs&logoColor=white"></a></p>
 
 <p align="center"><a href="docs/demo.txt">🎬 Real run</a> • <a href="#rules">🧭 13 rules</a> • <a href="#cli">🖥️ CLI</a> • <a href="#mcp">🤖 MCP</a> • <a href="#tests">🧪 Tests</a> • <a href="#ci">🔄 CI</a> • <a href="#credits">🏅 Credits</a></p>
 
@@ -375,7 +375,10 @@ AiT-Test/
 ├── pyproject.toml         # packaging (license = MIT)
 ├── LICENSE                # MIT license text
 ├── .github/workflows/
-│   └── ci.yml             # 4 jobs: test matrix (12) + package + lint + security
+│   ├── ci.yml             # 4 jobs: test matrix (12) + package + lint + security
+│   └── codeql.yml         # CodeQL, security-and-quality, weekly
+├── .github/codeql/
+│   └── codeql-config.yml  # query suite + tests/fixtures excluded
 ├── .github/dependabot.yml # SHA-pinned actions, updated weekly
 ├── src/ait/
 │   ├── engine.py          # discover / scan / compare_findings / verify_fix
@@ -404,6 +407,7 @@ AiT-Test/
 | Infra | `cache.py` | sqlite3 WAL, digest and ruleset keyed, prune, `--lf` index |
 | Infra | `models.py` | immutable Diagnostic/Patch/Witness, exit codes, SCHEMA_VERSION |
 | CI | `.github/workflows/ci.yml` | test matrix, self-scan, stdlib-only run, integration tests |
+| CI | `.github/workflows/codeql.yml` | CodeQL security-and-quality, `tests/fixtures` excluded |
 | CI | `tests/test_cli_integration.py` | drives the real `cli.py` / `mcp.py` through subprocess and asserts exit codes and JSON |
 
 </details>
@@ -468,6 +472,7 @@ which means the engine does not touch APIs scheduled for removal, and `python -S
 ## 🔄 CI (GitHub Actions)
 
 CI runs on GitHub Actions with every action pinned to a **commit SHA** (not a floating tag), and Dependabot updates them weekly.
+CodeQL is a workflow of its own (`codeql.yml`) on the same pinning policy.
 
 <details>
 <summary><b>🧪 Click to expand: the <code>test</code> job across 12 environments</b></summary>
@@ -509,33 +514,21 @@ Both asserts are internal invariants after type narrowing, so the threshold is `
 </details>
 
 <details>
-<summary><b>🔐 Click to expand: why CodeQL / dependency-review are not enabled</b></summary>
+<summary><b>🔐 Click to expand: CodeQL, dependency-review and the OSV badge</b></summary>
 
-Both require **GitHub Advanced Security** when the repo is private (CodeQL uses code scanning, dependency-review uses the dependency graph API).
+**CodeQL** runs in its own workflow (`.github/workflows/codeql.yml`) on every push to `main`, on a weekly schedule and on demand.
+It uses the `security-and-quality` suite, and `github/codeql-action` is pinned to v4.39.1 by commit SHA like every other action in the repo.
+`security-events: write` is granted to the analysis job only.
 
-If the repo is public and you want them, add a separate `.github/workflows/codeql.yml`:
+The first analysis reported 9 results. All nine were fixed rather than dismissed: three empty `except ...: pass` blocks became `contextlib.suppress(...)`,
+one duplicate import, one unused import and two unused local bindings were cleaned up,
+and the last two pointed at `tests/fixtures`, a corpus that is defective on purpose.
+That directory is now excluded through `.github/codeql/codeql-config.yml` instead of being dismissed alert by alert.
 
-```yaml
-name: CodeQL
-on:
-  push:
-    branches: [main]
-  schedule:
-    - cron: "0 3 * * 1"
-permissions:
-  contents: read
-  security-events: write
-jobs:
-  analyze:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-      - uses: github/codeql-action/init@793b778da9c9275a0f276522b27cb5fc14bba279 # v4
-        with:
-          languages: python
-          queries: security-and-quality
-      - uses: github/codeql-action/analyze@793b778da9c9275a0f276522b27cb5fc14bba279 # v4
-```
+**dependency-review** stays off. It needs the dependency graph API, and this package declares no dependencies at all, so it would review an empty set.
+
+**The OSV badge is not on this page.** OSV publishes no official badge, and a static "0 issues" shield would keep saying 0 after the first advisory,
+so the status lives in the `security` job of CI where it is actually refreshed. The CodeQL shield at the top of the page is different: it is GitHub's live status for that workflow.
 
 </details>
 
@@ -571,7 +564,7 @@ If false positives worry you more than false negatives, start with `--maxfail 5`
 | 🧪 Eight-Interpreter Verifier | confirmed 268 tests on CPython 3.10 → 3.15 across Windows 11 and WSL2 Ubuntu |
 | 🛡️ Zero-Dependency Keeper | 23 engine files, 7,080 lines, no runtime dependency and fully offline |
 | 🤖 MCP Toolsmith | JSON-RPC 2.0 contract for three tools with validation, `structuredContent` and a lifecycle that really closes |
-| 🔁 CI Gatekeeper | 4 jobs / 15 runs: test matrix on 12 environments + package + lint (ruff, bandit, actionlint) + OSV |
+| 🔁 CI Gatekeeper | 4 jobs / 15 runs: test matrix on 12 environments + package + lint (ruff, bandit, actionlint) + OSV, plus a CodeQL workflow sitting at 0 open alerts |
 
 </details>
 
