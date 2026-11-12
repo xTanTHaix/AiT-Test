@@ -17,7 +17,7 @@ from enum import Enum
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 ENGINE_NAME = "ait-engine"
-ENGINE_VERSION = "1.0.0"
+ENGINE_VERSION = "1.1.0"
 SCHEMA_VERSION = 1
 
 EXIT_CLEAN = 0

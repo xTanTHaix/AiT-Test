@@ -108,13 +108,94 @@ def _render_advice(reporter: Reporter, findings: Sequence[Diagnostic]) -> None:
         )
 
 
+def _run_sim_cli(argv: Sequence[str]) -> int:
+    """Run ChronoSim deterministic simulation testing (`ait sim <file.py> ...`)."""
+    import dataclasses
+    import json
+    from .sim.chronosim import ChronoRunner, FaultProfile, load_target_callable
+
+    sim_parser = argparse.ArgumentParser(
+        prog="ait sim",
+        description="ChronoSim deterministic simulation testing for Python async/sync targets.",
+    )
+    sim_parser.add_argument("file", help="Python file containing target callable")
+    sim_parser.add_argument("--func", default="main", help="Callable name to run (default: main)")
+    sim_parser.add_argument("--seed", type=int, default=0, help="Starting RNG seed (default: 0)")
+    sim_parser.add_argument("--seeds", type=int, default=1, help="Number of consecutive seeds to sweep")
+    sim_parser.add_argument("--drop-rate", type=float, default=0.0, help="Simulated channel drop rate [0..1]")
+    sim_parser.add_argument("--timeout-rate", type=float, default=0.0, help="Simulated timeout rate [0..1]")
+    sim_parser.add_argument("--reorder-rate", type=float, default=0.0, help="Simulated reorder rate [0..1]")
+    sim_parser.add_argument("--max-steps", type=int, default=10_000, help="Virtual clock step limit")
+    sim_parser.add_argument("--json", action="store_true", dest="as_json", help="Emit JSON output")
+    try:
+        ns = sim_parser.parse_args(list(argv))
+    except SystemExit as exc:
+        code = exc.code if isinstance(exc.code, int) else 0
+        return EXIT_USAGE if code != 0 else EXIT_CLEAN
+
+    try:
+        fn = load_target_callable(ns.file, ns.func)
+    except Exception as exc:
+        print(f"ERROR: {exc}", file=sys.stderr)
+        return EXIT_USAGE
+
+    profile = FaultProfile(
+        drop_rate=ns.drop_rate,
+        timeout_rate=ns.timeout_rate,
+        reorder_rate=ns.reorder_rate,
+        max_steps=ns.max_steps,
+    )
+    runner = ChronoRunner(profile)
+    if ns.seeds <= 1:
+        res = runner.run_once(fn, seed=ns.seed, target_label=ns.file)
+        if ns.as_json:
+            print(json.dumps(dataclasses.asdict(res), indent=2))
+        else:
+            status = "PASS" if res.passed else "FAIL"
+            print(
+                f"[ChronoSim] {status} | seed={res.seed} | virtual={res.virtual_time_ms:.2f}ms "
+                f"| steps={res.steps} | faults={res.faults_injected}"
+            )
+            if not res.passed:
+                print(f"  Error: {res.error_type}: {res.error_message}")
+                print(f"  Repro: {res.repro_command}")
+        return EXIT_CLEAN if res.passed else 1
+
+    sweep = runner.explore_seeds(fn, start_seed=ns.seed, count=ns.seeds, target_label=ns.file)
+    if ns.as_json:
+        print(
+            json.dumps(
+                {
+                    "total_runs": sweep.total_runs,
+                    "passed_runs": sweep.passed_runs,
+                    "failed_runs": sweep.failed_runs,
+                    "first_failing_seed": sweep.first_failing_seed,
+                },
+                indent=2,
+            )
+        )
+    else:
+        print(
+            f"[ChronoSim Sweep] {sweep.passed_runs}/{sweep.total_runs} passed"
+            + (f" | first failing seed={sweep.first_failing_seed}" if sweep.first_failing_seed is not None else "")
+        )
+        if sweep.first_failing_seed is not None and sweep.results:
+            last = sweep.results[-1]
+            print(f"  Error: {last.error_type}: {last.error_message}")
+            print(f"  Repro: {last.repro_command}")
+    return EXIT_CLEAN if sweep.failed_runs == 0 else 1
+
+
 def main(argv: Optional[Sequence[str]] = None) -> int:
     """Run one scan and return the process exit code."""
     configure_stream(sys.stdout)
     configure_stream(sys.stderr)
+    raw_argv = list(sys.argv[1:] if argv is None else argv)
+    if raw_argv and raw_argv[0] == "sim":
+        return _run_sim_cli(raw_argv[1:])
     parser = build_parser()
     try:
-        args = parser.parse_args(argv)
+        args = parser.parse_args(raw_argv)
     except SystemExit as exc:
         code = exc.code if isinstance(exc.code, int) else 0
         return EXIT_USAGE if code != 0 else EXIT_CLEAN

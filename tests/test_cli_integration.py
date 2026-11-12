@@ -173,7 +173,7 @@ class ExitCodeTests(TestCase):
     def test_version_exits_zero(self) -> None:
         result = run_cli("--version")
         self.assertEqual(result.returncode, 0)
-        self.assertIn("ait-engine 1.0.0", result.stdout)
+        self.assertIn("ait-engine 1.1.0", result.stdout)
 
 
 class FlagTests(TestCase):

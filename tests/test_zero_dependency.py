@@ -76,7 +76,7 @@ class StdlibOnlyTests(unittest.TestCase):
             timeout=120,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(result.stdout.strip(), "1.0.0")
+        self.assertEqual(result.stdout.strip(), "1.1.0")
 
     def test_cli_runs_under_isolated_site(self) -> None:
         result = subprocess.run(
@@ -97,7 +97,7 @@ class PackagingTests(unittest.TestCase):
         text = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
         self.assertIn("dependencies = []", text)
         self.assertIn('name = "ait-test"', text)
-        self.assertIn('version = "1.0.0"', text)
+        self.assertIn('version = "1.1.0"', text)
 
     def test_no_compiled_or_vendored_payload_is_shipped(self) -> None:
         suffixes = {path.suffix for path in ENGINE_ROOT.rglob("*") if path.is_file()}

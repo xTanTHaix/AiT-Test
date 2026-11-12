@@ -145,7 +145,7 @@ class Reporter:
             f"platform {sys.platform} -- Python {sys.version.split()[0]}, "
             f"{ENGINE_NAME}-{ENGINE_VERSION}"
         )
-        if cache_dir:
+        if cache_dir and self.verbose:
             index_note = (
                 f"Indexed: {indexed} modules, {cached} unchanged [cached]"
                 if indexed
@@ -167,17 +167,29 @@ class Reporter:
         total: int,
         cached: bool = False,
     ) -> None:
-        """Stream one pytest-style progress row for a module."""
+        """Stream one progress row for a module (clean summary by default, markers on -v)."""
         if self.quiet:
             return
-        markers = self._markers(findings)
         percent = int(round((index / total) * 100)) if total else 100
         name = relative if len(relative) <= 48 else "..." + relative[-45:]
-        suffix = " (cached)" if cached and self.verbose else ""
-        self._write(
-            f"{name} {self._paint_markers(markers)}"
-            f"{' ' * max(1, 8 - len(markers))}[{percent:3d}%]{suffix}"
-        )
+        if self.verbose:
+            markers = self._markers(findings)
+            suffix = " (cached)" if cached else ""
+            self._write(
+                f"{name} {self._paint_markers(markers)}"
+                f"{' ' * max(1, 8 - len(markers))}[{percent:3d}%]{suffix}"
+            )
+        else:
+            if not findings:
+                badge = self.paint("OK", GREEN)
+            else:
+                counts: Dict[str, int] = {}
+                for f in findings:
+                    counts[f.severity.value] = counts.get(f.severity.value, 0) + 1
+                parts = [f"{sev} {cnt}" for sev, cnt in counts.items()]
+                top_color = RED if counts.get("DEFECT") else (YELLOW if counts.get("WARNING") else CYAN)
+                badge = self.paint("[" + " · ".join(parts) + "]", top_color)
+            self._write(f"{name:<48} {badge} [{percent:3d}%]")
         for finding in findings:
             if finding.severity is not Severity.DEFECT or not self.verbose:
                 continue
@@ -235,31 +247,37 @@ class Reporter:
             )
 
     def _failure_block(self, finding: Diagnostic) -> None:
-        """Render one diagnostic with its slice, trace, witness and diff."""
+        """Render one diagnostic cleanly by default; full trace/witness on --verbose."""
         title = self._rules[finding.rule_id].title if finding.rule_id in self._rules else ""
         headline = f"[{finding.rule_id}] {title}"
         self._write()
         self._write(self.paint(_banner(headline), _SEVERITY_COLOR[finding.severity.value] + BOLD))
-        self._write(f"File: {finding.location.format()}")
-        self._write(
-            f"Severity: {self.severity_label(finding.severity)} "
-            f"(Confidence: {finding.confidence:.2f})"
-        )
-        if finding.function:
-            self._write(f"Function: {finding.function}")
-        if finding.symbol:
-            self._write(f"Symbol: {finding.symbol}")
+        fn_note = f" in {finding.function}" if finding.function else ""
+        if self.verbose:
+            self._write(f"File: {finding.location.format()}")
+            self._write(
+                f"Severity: {self.severity_label(finding.severity)} "
+                f"(Confidence: {finding.confidence:.2f})"
+            )
+            if finding.function:
+                self._write(f"Function: {finding.function}")
+            if finding.symbol:
+                self._write(f"Symbol: {finding.symbol}")
+        else:
+            self._write(
+                f"{self.severity_label(finding.severity)} at {finding.location.format()}{fn_note}"
+            )
         self._write()
         self._write(f"  {finding.message}")
         self._write()
         self._render_slice(finding)
-        if finding.causation:
+        if self.verbose and finding.causation:
             self._write()
             self._write(self.paint("--- Causation Trace ---", BOLD))
             for step in finding.causation:
                 self._write(f"  Step {step.index} | {step.location.format()}")
                 self._write(f"         | {step.note}")
-        if finding.witness is not None:
+        if self.verbose and finding.witness is not None:
             self._write()
             self._write(self.paint("--- Minimal Repro Witness ---", BOLD))
             self._write(self.paint(f"  {finding.witness.summary}", DIM))

@@ -89,7 +89,7 @@ class FramingTests(ServerHarness):
         self.assertEqual(response["jsonrpc"], "2.0")
         self.assertEqual(response["id"], "init-1")
         self.assertEqual(response["result"]["protocolVersion"], "2024-11-05")
-        self.assertEqual(response["result"]["serverInfo"]["version"], "1.0.0")
+        self.assertEqual(response["result"]["serverInfo"]["version"], "1.1.0")
 
     def test_unknown_protocol_falls_back_to_the_current_version(self) -> None:
         response = self.call(
@@ -559,7 +559,7 @@ class StdioBridgeTests(unittest.TestCase):
             timeout=60,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("1.0.0", result.stdout)
+        self.assertIn("1.1.0", result.stdout)
 
     def test_unknown_option_exits_two(self) -> None:
         result = subprocess.run(

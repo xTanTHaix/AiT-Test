@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ait-test"
-version = "1.0.0"
+version = "1.1.0"
 description = "High-assurance static invariant, causation and concurrency diagnostic engine"
 readme = "README.md"
 requires-python = ">=3.10"

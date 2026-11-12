@@ -571,6 +571,25 @@ If false positives worry you more than false negatives, start with `--maxfail 5`
 
 ---
 
+<a id="changelog" name="changelog"></a>
+## 📋 Changelog
+
+<details>
+<summary><b>🚀 Click to expand: v1.1.0 &amp; v1.0.0 release notes</b></summary>
+
+### `1.1.0`
+- **ChronoSim Deterministic Simulation Testing (`src/ait/sim/`):** Added zero-dependency single-seed DST (`VirtualClock`, `SimChannel`, `FaultProfile`, `ChronoRunner`, `explore_seeds`) to catch flaky `asyncio`/timing/channel bugs and replay any failure deterministically from one `--seed`.
+- **New `ait sim` CLI Subcommand:** Run `python cli.py sim <file.py> --seeds 20 --drop-rate 0.2` (with `--json` support) to sweep seeds and print an exact reproduction command on the first failing seed.
+- **Cleaner Default CLI Output (`src/ait/reporter.py`):** Replaced cryptic per-rule marker strings (`FWF..........`) with readable severity badges (`[DEFECT 2 · WARNING 1]` / `OK`), simplified failure headers (`DEFECT at file:line`), and tucked raw `Confidence` scores, `Causation Trace`, and `Minimal Repro Witness` blocks behind `-v` / `--verbose`.
+- **Version Bump:** Updated `ait-engine` and package metadata from `1.0.0` to `1.1.0` while keeping 100% pure Python stdlib compatibility (`dependencies = []`).
+
+### `1.0.0`
+- Initial stable release with 13 static invariant, causation, concurrency, nullability, mutation, and process-safety rules (`AIT-Z/R/A/M/N/H`), SQLite WAL caching, unified patch suggestions, and JSON-RPC 2.0 MCP server.
+
+</details>
+
+---
+
 <p align="center"><a href="https://ko-fi.com/xtanthaix"><img alt="Ko-fi: buy me a coffee" width="46%" src="https://img.shields.io/badge/Ko--fi-buy%20me%20a%20coffee-FF5E5B?style=flat-square&logo=kofi&logoColor=white"></a></p>
 
 <p align="center"><i>Written and maintained by <a href="https://ko-fi.com/xtanthaix">xTanTHaix</a> · if AiT-test saved you time, you can buy the developer a coffee at <a href="https://ko-fi.com/xtanthaix">ko-fi.com/xtanthaix</a> ☕</i></p>

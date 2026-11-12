@@ -573,6 +573,25 @@ Bandit รายงาน `B101 assert` อยู่ 2 จุด (`cache.py`, `c
 
 ---
 
+<a id="changelog" name="changelog"></a>
+## 📋 ประวัติการเปลี่ยนแปลง (Changelog)
+
+<details>
+<summary><b>🚀 คลิกเพื่อขยาย: รายละเอียดการอัปเดต v1.1.0 และ v1.0.0</b></summary>
+
+### `1.1.0`
+- **ChronoSim Deterministic Simulation Testing (`src/ait/sim/`):** เพิ่มระบบทดสอบจำลองแบบกำหนดผลลัพธ์ได้จาก Seed เดียว (`VirtualClock`, `SimChannel`, `FaultProfile`, `ChronoRunner`, `explore_seeds`) ด้วย Pure Python stdlib 100% สำหรับจับบั๊ก `asyncio` / race / timeout ที่เกิดสุ่ม ๆ และสั่ง Replay ซ้ำได้เป๊ะจาก `--seed` เดียว
+- **คำสั่งย่อย `ait sim` บน CLI:** รองรับ `python cli.py sim <file.py> --seeds 20 --drop-rate 0.2` (พร้อม `--json`) สำหรับกวาดหา Seed ที่พังตัวแรกและพิมพ์คำสั่ง Replay ให้อัตโนมัติ
+- **ปรับหน้าตา CLI โหมดปกติให้อ่านง่ายขึ้น (`src/ait/reporter.py`):** เปลี่ยนรหัสย่อ `FWF..........` เป็นป้ายสรุปชัดเจน (`[DEFECT 2 · WARNING 1]` / `OK`), ย่อหัวข้อเป็น `DEFECT at file:line`, และซ่อนค่า `Confidence`, `Causation Trace` และ `Minimal Repro Witness` ไว้ในโหมด `-v` / `--verbose`
+- **อัปเดตเวอร์ชันเป็น `1.1.0`:** อัปเดต `ait-engine` และ metadata เป็น `1.1.0` โดยยังคงความเข้ากันได้แบบ Zero-Dependency 100% (`dependencies = []`)
+
+### `1.0.0`
+- เวอร์ชันเสถียรแรก: กฎวิเคราะห์สถิต 13 ข้อ (`AIT-Z/R/A/M/N/H`), ระบบแคช SQLite WAL, ตัวแนะนำแพตช์แบบ unified diff และเซิร์ฟเวอร์ MCP JSON-RPC 2.0
+
+</details>
+
+---
+
 <p align="center"><a href="https://ko-fi.com/xtanthaix"><img alt="Ko-fi: buy me a coffee" width="46%" src="https://img.shields.io/badge/Ko--fi-buy%20me%20a%20coffee-FF5E5B?style=flat-square&logo=kofi&logoColor=white"></a></p>
 
 <p align="center"><i>เขียนและดูแลโดย <a href="https://ko-fi.com/xtanthaix">xTanTHaix</a> · ถ้า AiT-test ช่วยประหยัดเวลาคุณได้ เลี้ยงกาแฟผู้พัฒนาสักแก้วได้ที่ <a href="https://ko-fi.com/xtanthaix">ko-fi.com/xtanthaix</a> ☕</i></p>
